@@ -1,0 +1,116 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">Operadores</h2>
+      <p class="text-muted small mb-0">Cadastro de operadores por setor e turno</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirFormulario()">+ Novo Operador</button>
+  </div>
+
+  <!-- Formulário de cadastro / edição -->
+  @if (exibirFormulario) {
+    <div class="card mb-4 border-primary">
+      <div class="card-header bg-primary text-white">
+        {{ editId ? 'Editar Operador' : 'Cadastrar Novo Operador' }}
+      </div>
+      <div class="card-body">
+        <form (ngSubmit)="salvar()" #f="ngForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nome Completo *</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="form.nome" name="nome" required
+                placeholder="Nome completo do operador">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Matrícula *</label>
+              <input type="text" class="form-control"
+                [(ngModel)]="form.matricula" name="matricula" required
+                placeholder="Ex: OP-2024-001">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Turno *</label>
+              <select class="form-select" [(ngModel)]="form.turno" name="turno" required>
+                <option value="">Selecione o turno</option>
+                @for (turno of turnos; track turno) {
+                  <option [value]="turno">{{ turno }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Setor *</label>
+              <!--
+                O <select> abaixo usa <optgroup> para agrupar os setores
+                por categoria — destaque do projeto conforme enunciado.
+              -->
+              <select class="form-select" [(ngModel)]="form.setorId" name="setorId" required>
+                <option value="">Selecione o setor</option>
+                @for (grupo of setoresPorCategoria; track grupo.categoria) {
+                  <optgroup [label]="grupo.categoria">
+                    @for (setor of grupo.setores; track setor.id) {
+                      <option [value]="setor.id">{{ setor.nome }}</option>
+                    }
+                  </optgroup>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success" [disabled]="f.invalid">
+              {{ editId ? 'Salvar Alterações' : 'Cadastrar' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Tabela de operadores -->
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Nome</th>
+            <th>Matrícula</th>
+            <th>Turno</th>
+            <th>Setor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (op of operadores; track op.id) {
+            <tr>
+              <td class="fw-semibold">{{ op.nome }}</td>
+              <td><code>{{ op.matricula }}</code></td>
+              <td>
+                <span class="badge"
+                  [class.bg-warning]="op.turno === 'Tarde'"
+                  [class.bg-dark]="op.turno === 'Noite'"
+                  [class.bg-info]="op.turno === 'Manhã'">
+                  {{ op.turno }}
+                </span>
+              </td>
+              <td>{{ getNomeSetor(op.setorId) }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="abrirFormulario(op)">
+                  Editar
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="excluir(op.id!)">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="text-center text-muted py-4">
+                Nenhum operador cadastrado. Clique em "+ Novo Operador" para começar.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,106 @@
+<div class="container-fluid py-4">
+  <h1 class="mb-1">Dashboard de Consumo de Energia</h1>
+  <p class="text-muted mb-4">Monitoramento em tempo real — Smart Grid Industrial</p>
+
+  <!-- Cards de métricas -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-white bg-primary h-100">
+        <div class="card-body">
+          <p class="card-title small mb-1">Consumo Total</p>
+          <p class="fs-3 fw-bold mb-0">{{ totalConsumo }} kWh</p>
+          <small>Meta: {{ totalMeta }} kWh</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-white bg-info h-100">
+        <div class="card-body">
+          <p class="card-title small mb-1">Setores Monitorados</p>
+          <p class="fs-3 fw-bold mb-0">{{ setores.length }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-white h-100"
+        [class.bg-danger]="setoresAcimaMeta > 0"
+        [class.bg-success]="setoresAcimaMeta === 0">
+        <div class="card-body">
+          <p class="card-title small mb-1">Acima da Meta</p>
+          <p class="fs-3 fw-bold mb-0">{{ setoresAcimaMeta }}</p>
+          <small>de {{ setores.length }} setores</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-white bg-secondary h-100">
+        <div class="card-body">
+          <p class="card-title small mb-1">Operadores</p>
+          <p class="fs-3 fw-bold mb-0">{{ operadores.length }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfico de barras -->
+  <div class="card mb-4">
+    <div class="card-header fw-semibold">Consumo Atual vs Meta por Setor (kWh)</div>
+    <div class="card-body position-relative" style="height: 280px;">
+      <canvas #barChart [style.display]="carregado ? 'block' : 'none'"></canvas>
+      @if (!carregado) {
+        <div class="d-flex justify-content-center align-items-center h-100">
+          <div class="spinner-border text-primary"></div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Cards de setores com cor dinâmica -->
+  <h4 class="mb-3">Status dos Setores</h4>
+  @if (carregado) {
+    <div class="row g-3">
+      @for (setor of setores; track setor.id) {
+        <div class="col-md-4">
+          <div class="card h-100 border-2"
+            [class.border-success]="getStatus(setor) === 'success'"
+            [class.border-warning]="getStatus(setor) === 'warning'"
+            [class.border-danger]="getStatus(setor) === 'danger'">
+            <div class="card-body"
+              [class.bg-success]="getStatus(setor) === 'success'"
+              [class.bg-warning]="getStatus(setor) === 'warning'"
+              [class.bg-danger]="getStatus(setor) === 'danger'"
+              [class.bg-opacity-10]="true">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h5 class="card-title mb-0">{{ setor.nome }}</h5>
+                  <small class="text-muted">{{ setor.categoria }}</small>
+                </div>
+                <span class="badge"
+                  [class.bg-success]="getStatus(setor) === 'success'"
+                  [class.bg-warning]="getStatus(setor) === 'warning'"
+                  [class.bg-danger]="getStatus(setor) === 'danger'">
+                  {{ getStatusLabel(setor) }}
+                </span>
+              </div>
+              <p class="fs-4 fw-bold mb-1">{{ setor.consumo_atual }} kWh</p>
+              <p class="text-muted small mb-2">Meta: {{ setor.consumo_meta }} kWh</p>
+              <div class="progress mb-1" style="height: 8px;">
+                <div class="progress-bar"
+                  [class.bg-success]="getStatus(setor) === 'success'"
+                  [class.bg-warning]="getStatus(setor) === 'warning'"
+                  [class.bg-danger]="getStatus(setor) === 'danger'"
+                  [style.width.%]="getBarWidth(setor)">
+                </div>
+              </div>
+              <small class="text-muted">{{ getBarWidth(setor) }}% da meta</small>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary"></div>
+    </div>
+  }
+</div>
