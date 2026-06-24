@@ -7,11 +7,16 @@
     <button class="btn btn-primary" (click)="abrirFormulario()">+ Novo Setor</button>
   </div>
 
-  <!-- Formulário de cadastro / edição -->
+  @if (erro()) {
+    <div class="alert alert-danger">
+      Não foi possível carregar os setores. Verifique se a API está rodando com <code>npm run api</code>.
+    </div>
+  }
+
   @if (exibirFormulario()) {
     <div class="card mb-4 border-primary">
       <div class="card-header bg-primary text-white">
-        {{ editId() ? 'Editar Setor' : 'Cadastrar Novo Setor' }}
+        {{ editId() !== null ? 'Editar Setor' : 'Cadastrar Novo Setor' }}
       </div>
       <div class="card-body">
         <form (ngSubmit)="salvar()" #f="ngForm">
@@ -44,7 +49,7 @@
           </div>
           <div class="d-flex gap-2 mt-3">
             <button type="submit" class="btn btn-success" [disabled]="f.invalid">
-              {{ editId() ? 'Salvar Alterações' : 'Cadastrar' }}
+              {{ editId() !== null ? 'Salvar Alterações' : 'Cadastrar' }}
             </button>
             <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
           </div>
@@ -53,7 +58,6 @@
     </div>
   }
 
-  <!-- Tabela de setores -->
   <div class="card">
     <div class="card-body p-0">
       <table class="table table-hover align-middle mb-0">
@@ -83,12 +87,8 @@
                 </span>
               </td>
               <td>
-                <button class="btn btn-sm btn-outline-primary me-1" (click)="abrirFormulario(setor)">
-                  Editar
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="excluir(setor.id!)">
-                  Excluir
-                </button>
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="abrirFormulario(setor)">Editar</button>
+                <button class="btn btn-sm btn-outline-danger" (click)="excluir(setor.id!)">Excluir</button>
               </td>
             </tr>
           } @empty {

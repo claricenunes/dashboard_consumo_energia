@@ -17,11 +17,11 @@ export class SetorService {
     return this.http.post<Setor>(this.apiUrl, setor);
   }
 
-  update(id: number, setor: Setor): Observable<Setor> {
+  update(id: string | number, setor: Setor): Observable<Setor> {
     return this.http.put<Setor>(`${this.apiUrl}/${id}`, setor);
   }
 
-  remove(id: number): Observable<void> {
+  remove(id: string | number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

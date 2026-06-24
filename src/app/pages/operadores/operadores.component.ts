@@ -17,6 +17,7 @@ const TURNOS = ['Manhã', 'Tarde', 'Noite'];
 export class OperadoresComponent implements OnInit {
   operadores = signal<Operador[]>([]);
   setores = signal<Setor[]>([]);
+  erro = signal(false);
   form: Partial<Operador> = {};
   editId = signal<string | number | null>(null);
   exibirFormulario = signal(false);
@@ -38,16 +39,20 @@ export class OperadoresComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.carregarSetores();
-    this.carregarOperadores();
+    this.setorService.getAll().subscribe({
+      next: data => this.setores.set(data),
+      error: () => this.erro.set(true)
+    });
+    this.operadorService.getAll().subscribe({
+      next: data => this.operadores.set(data),
+      error: () => this.erro.set(true)
+    });
   }
 
   carregarOperadores(): void {
-    this.operadorService.getAll().subscribe(data => this.operadores.set(data));
-  }
-
-  carregarSetores(): void {
-    this.setorService.getAll().subscribe(data => this.setores.set(data));
+    this.operadorService.getAll().subscribe({
+      next: data => this.operadores.set(data)
+    });
   }
 
   getNomeSetor(setorId: string | number): string {
@@ -68,24 +73,24 @@ export class OperadoresComponent implements OnInit {
 
   salvar(): void {
     const payload: Omit<Operador, 'id'> = {
-      setorId: Number(this.form.setorId),
+      setorId: this.form.setorId!,
       nome: this.form.nome!.trim(),
       turno: this.form.turno!,
       matricula: this.form.matricula!.trim().toUpperCase()
     };
     const id = this.editId();
-    if (id) {
-      this.operadorService.update(id as number, { ...payload, id })
-        .subscribe(() => { this.carregarOperadores(); this.cancelar(); });
+    if (id !== null) {
+      this.operadorService.update(id, { ...payload, id })
+        .subscribe({ next: () => { this.carregarOperadores(); this.cancelar(); } });
     } else {
       this.operadorService.create(payload)
-        .subscribe(() => { this.carregarOperadores(); this.cancelar(); });
+        .subscribe({ next: () => { this.carregarOperadores(); this.cancelar(); } });
     }
   }
 
   excluir(id: string | number): void {
     if (confirm('Excluir este operador?')) {
-      this.operadorService.remove(id as number).subscribe(() => this.carregarOperadores());
+      this.operadorService.remove(id).subscribe({ next: () => this.carregarOperadores() });
     }
   }
 }

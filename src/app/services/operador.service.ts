@@ -17,11 +17,11 @@ export class OperadorService {
     return this.http.post<Operador>(this.apiUrl, operador);
   }
 
-  update(id: number, operador: Operador): Observable<Operador> {
+  update(id: string | number, operador: Operador): Observable<Operador> {
     return this.http.put<Operador>(`${this.apiUrl}/${id}`, operador);
   }
 
-  remove(id: number): Observable<void> {
+  remove(id: string | number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

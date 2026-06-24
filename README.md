@@ -85,25 +85,20 @@ npm install
 
 ### Executar o projeto
 
-Abra **dois terminais**:
-
-**Terminal 1 — API (json-server):**
 ```bash
-npm run api
+npm run dev
 ```
-A API ficará disponível em `http://localhost:3000`
+
+Inicia a API e a aplicação Angular simultaneamente em um único terminal.
+
+- API disponível em `http://localhost:3000`
+- Aplicação disponível em `http://localhost:4200`
 
 Endpoints disponíveis:
 - `GET/POST` → `http://localhost:3000/setores`
 - `GET/PUT/DELETE` → `http://localhost:3000/setores/:id`
 - `GET/POST` → `http://localhost:3000/operadores`
 - `GET/PUT/DELETE` → `http://localhost:3000/operadores/:id`
-
-**Terminal 2 — Aplicação Angular:**
-```bash
-npm start
-```
-Acesse em `http://localhost:4200`
 
 ---
 

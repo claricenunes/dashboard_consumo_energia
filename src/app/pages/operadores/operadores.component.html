@@ -7,11 +7,16 @@
     <button class="btn btn-primary" (click)="abrirFormulario()">+ Novo Operador</button>
   </div>
 
-  <!-- Formulário de cadastro / edição -->
+  @if (erro()) {
+    <div class="alert alert-danger">
+      Não foi possível carregar os dados. Verifique se a API está rodando com <code>npm run api</code>.
+    </div>
+  }
+
   @if (exibirFormulario()) {
     <div class="card mb-4 border-primary">
       <div class="card-header bg-primary text-white">
-        {{ editId() ? 'Editar Operador' : 'Cadastrar Novo Operador' }}
+        {{ editId() !== null ? 'Editar Operador' : 'Cadastrar Novo Operador' }}
       </div>
       <div class="card-body">
         <form (ngSubmit)="salvar()" #f="ngForm">
@@ -53,7 +58,7 @@
           </div>
           <div class="d-flex gap-2 mt-3">
             <button type="submit" class="btn btn-success" [disabled]="f.invalid">
-              {{ editId() ? 'Salvar Alterações' : 'Cadastrar' }}
+              {{ editId() !== null ? 'Salvar Alterações' : 'Cadastrar' }}
             </button>
             <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
           </div>
@@ -62,7 +67,6 @@
     </div>
   }
 
-  <!-- Tabela de operadores -->
   <div class="card">
     <div class="card-body p-0">
       <table class="table table-hover align-middle mb-0">
@@ -82,20 +86,16 @@
               <td><code>{{ op.matricula }}</code></td>
               <td>
                 <span class="badge"
+                  [class.bg-info]="op.turno === 'Manhã'"
                   [class.bg-warning]="op.turno === 'Tarde'"
-                  [class.bg-dark]="op.turno === 'Noite'"
-                  [class.bg-info]="op.turno === 'Manhã'">
+                  [class.bg-dark]="op.turno === 'Noite'">
                   {{ op.turno }}
                 </span>
               </td>
               <td>{{ getNomeSetor(op.setorId) }}</td>
               <td>
-                <button class="btn btn-sm btn-outline-primary me-1" (click)="abrirFormulario(op)">
-                  Editar
-                </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="excluir(op.id!)">
-                  Excluir
-                </button>
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="abrirFormulario(op)">Editar</button>
+                <button class="btn btn-sm btn-outline-danger" (click)="excluir(op.id!)">Excluir</button>
               </td>
             </tr>
           } @empty {

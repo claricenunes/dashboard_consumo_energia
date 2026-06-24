@@ -14,6 +14,7 @@ const CATEGORIAS = ['Produção', 'Administrativo', 'Logística', 'Manutenção'
 })
 export class SetoresComponent implements OnInit {
   setores = signal<Setor[]>([]);
+  erro = signal(false);
   form: Partial<Setor> = {};
   editId = signal<string | number | null>(null);
   exibirFormulario = signal(false);
@@ -26,7 +27,10 @@ export class SetoresComponent implements OnInit {
   }
 
   carregar(): void {
-    this.setorService.getAll().subscribe(data => this.setores.set(data));
+    this.setorService.getAll().subscribe({
+      next: data => this.setores.set(data),
+      error: () => this.erro.set(true)
+    });
   }
 
   abrirFormulario(setor?: Setor): void {
@@ -49,18 +53,18 @@ export class SetoresComponent implements OnInit {
       consumo_atual: Number(this.form.consumo_atual)
     };
     const id = this.editId();
-    if (id) {
-      this.setorService.update(id as number, { ...payload, id })
-        .subscribe(() => { this.carregar(); this.cancelar(); });
+    if (id !== null) {
+      this.setorService.update(id, { ...payload, id })
+        .subscribe({ next: () => { this.carregar(); this.cancelar(); } });
     } else {
       this.setorService.create(payload)
-        .subscribe(() => { this.carregar(); this.cancelar(); });
+        .subscribe({ next: () => { this.carregar(); this.cancelar(); } });
     }
   }
 
   excluir(id: string | number): void {
     if (confirm('Excluir este setor?')) {
-      this.setorService.remove(id as number).subscribe(() => this.carregar());
+      this.setorService.remove(id).subscribe({ next: () => this.carregar() });
     }
   }
 

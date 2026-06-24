@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { forkJoin, Subscription } from 'rxjs';
 import { SetorService } from '../../services/setor.service';
 import { OperadorService } from '../../services/operador.service';
 import { Setor } from '../../models/setor.model';
-import { Operador } from '../../models/operador.model';
 
 Chart.register(...registerables);
 
@@ -18,28 +17,35 @@ Chart.register(...registerables);
 export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('barChart', { static: true }) barChartRef!: ElementRef<HTMLCanvasElement>;
 
-  setores: Setor[] = [];
-  operadores: Operador[] = [];
-  carregado = false;
+  setores = signal<Setor[]>([]);
+  totalOperadores = signal(0);
+  carregado = signal(false);
+  erro = signal(false);
+
+  totalConsumo = computed(() => this.setores().reduce((acc, s) => acc + s.consumo_atual, 0));
+  totalMeta    = computed(() => this.setores().reduce((acc, s) => acc + s.consumo_meta, 0));
+  setoresAcimaMeta = computed(() => this.setores().filter(s => s.consumo_atual > s.consumo_meta).length);
+
   private chart: Chart | null = null;
   private sub?: Subscription;
 
   constructor(
     private setorService: SetorService,
-    private operadorService: OperadorService,
-    private cdr: ChangeDetectorRef
+    private operadorService: OperadorService
   ) {}
 
   ngOnInit(): void {
     this.sub = forkJoin({
       setores: this.setorService.getAll(),
       operadores: this.operadorService.getAll()
-    }).subscribe(({ setores, operadores }) => {
-      this.setores = setores;
-      this.operadores = operadores;
-      this.carregado = true;
-      this.cdr.detectChanges();
-      this.renderizarGrafico(this.barChartRef.nativeElement);
+    }).subscribe({
+      next: ({ setores, operadores }) => {
+        this.setores.set(setores);
+        this.totalOperadores.set(operadores.length);
+        this.carregado.set(true);
+        this.renderizarGrafico(this.barChartRef.nativeElement);
+      },
+      error: () => this.erro.set(true)
     });
   }
 
@@ -47,18 +53,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
     this.chart?.destroy();
     this.chart = null;
-  }
-
-  get totalConsumo(): number {
-    return this.setores.reduce((acc, s) => acc + s.consumo_atual, 0);
-  }
-
-  get totalMeta(): number {
-    return this.setores.reduce((acc, s) => acc + s.consumo_meta, 0);
-  }
-
-  get setoresAcimaMeta(): number {
-    return this.setores.filter(s => s.consumo_atual > s.consumo_meta).length;
   }
 
   getStatus(setor: Setor): 'success' | 'warning' | 'danger' {
@@ -79,16 +73,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private renderizarGrafico(canvas: HTMLCanvasElement): void {
     if (this.chart) this.chart.destroy();
-
     this.chart = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: this.setores.map(s => s.nome),
+        labels: this.setores().map(s => s.nome),
         datasets: [
           {
             label: 'Consumo Atual (kWh)',
-            data: this.setores.map(s => s.consumo_atual),
-            backgroundColor: this.setores.map(s => {
+            data: this.setores().map(s => s.consumo_atual),
+            backgroundColor: this.setores().map(s => {
               const st = this.getStatus(s);
               if (st === 'danger')  return 'rgba(220,53,69,0.75)';
               if (st === 'warning') return 'rgba(255,193,7,0.75)';
@@ -97,7 +90,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           },
           {
             label: 'Meta (kWh)',
-            data: this.setores.map(s => s.consumo_meta),
+            data: this.setores().map(s => s.consumo_meta),
             backgroundColor: 'rgba(13,110,253,0.25)',
             borderColor: 'rgba(13,110,253,0.8)',
             borderWidth: 2
