@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SetorService } from '../../services/setor.service';
@@ -13,10 +13,10 @@ const CATEGORIAS = ['Produção', 'Administrativo', 'Logística', 'Manutenção'
   templateUrl: './setores.component.html'
 })
 export class SetoresComponent implements OnInit {
-  setores: Setor[] = [];
+  setores = signal<Setor[]>([]);
   form: Partial<Setor> = {};
-  editId: number | null = null;
-  exibirFormulario = false;
+  editId = signal<string | number | null>(null);
+  exibirFormulario = signal(false);
   readonly categorias = CATEGORIAS;
 
   constructor(private setorService: SetorService) {}
@@ -26,19 +26,19 @@ export class SetoresComponent implements OnInit {
   }
 
   carregar(): void {
-    this.setorService.getAll().subscribe(data => (this.setores = data));
+    this.setorService.getAll().subscribe(data => this.setores.set(data));
   }
 
   abrirFormulario(setor?: Setor): void {
-    this.editId = setor?.id ?? null;
+    this.editId.set(setor?.id ?? null);
     this.form = setor ? { ...setor } : {};
-    this.exibirFormulario = true;
+    this.exibirFormulario.set(true);
   }
 
   cancelar(): void {
-    this.exibirFormulario = false;
+    this.exibirFormulario.set(false);
     this.form = {};
-    this.editId = null;
+    this.editId.set(null);
   }
 
   salvar(): void {
@@ -48,8 +48,9 @@ export class SetoresComponent implements OnInit {
       consumo_meta: Number(this.form.consumo_meta),
       consumo_atual: Number(this.form.consumo_atual)
     };
-    if (this.editId) {
-      this.setorService.update(this.editId, { ...payload, id: this.editId })
+    const id = this.editId();
+    if (id) {
+      this.setorService.update(id as number, { ...payload, id })
         .subscribe(() => { this.carregar(); this.cancelar(); });
     } else {
       this.setorService.create(payload)
@@ -57,9 +58,9 @@ export class SetoresComponent implements OnInit {
     }
   }
 
-  excluir(id: number): void {
+  excluir(id: string | number): void {
     if (confirm('Excluir este setor?')) {
-      this.setorService.remove(id).subscribe(() => this.carregar());
+      this.setorService.remove(id as number).subscribe(() => this.carregar());
     }
   }
 

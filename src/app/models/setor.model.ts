@@ -1,5 +1,5 @@
 export interface Setor {
-  id?: number;
+  id?: string | number;
   nome: string;
   categoria: string;
   consumo_meta: number;

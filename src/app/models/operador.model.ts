@@ -1,6 +1,6 @@
 export interface Operador {
-  id?: number;
-  setorId: number;
+  id?: string | number;
+  setorId: string | number;
   nome: string;
   turno: string;
   matricula: string;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OperadorService } from '../../services/operador.service';
@@ -15,12 +15,22 @@ const TURNOS = ['Manhã', 'Tarde', 'Noite'];
   templateUrl: './operadores.component.html'
 })
 export class OperadoresComponent implements OnInit {
-  operadores: Operador[] = [];
-  setores: Setor[] = [];
+  operadores = signal<Operador[]>([]);
+  setores = signal<Setor[]>([]);
   form: Partial<Operador> = {};
-  editId: number | null = null;
-  exibirFormulario = false;
+  editId = signal<string | number | null>(null);
+  exibirFormulario = signal(false);
   readonly turnos = TURNOS;
+
+  setoresPorCategoria = computed(() => {
+    const mapa = new Map<string, Setor[]>();
+    this.setores().forEach(s => {
+      const cat = s.categoria || 'Outros';
+      if (!mapa.has(cat)) mapa.set(cat, []);
+      mapa.get(cat)!.push(s);
+    });
+    return Array.from(mapa.entries()).map(([categoria, setores]) => ({ categoria, setores }));
+  });
 
   constructor(
     private operadorService: OperadorService,
@@ -33,37 +43,27 @@ export class OperadoresComponent implements OnInit {
   }
 
   carregarOperadores(): void {
-    this.operadorService.getAll().subscribe(data => (this.operadores = data));
+    this.operadorService.getAll().subscribe(data => this.operadores.set(data));
   }
 
   carregarSetores(): void {
-    this.setorService.getAll().subscribe(data => (this.setores = data));
+    this.setorService.getAll().subscribe(data => this.setores.set(data));
   }
 
-  get setoresPorCategoria(): { categoria: string; setores: Setor[] }[] {
-    const mapa = new Map<string, Setor[]>();
-    this.setores.forEach(s => {
-      const cat = s.categoria || 'Outros';
-      if (!mapa.has(cat)) mapa.set(cat, []);
-      mapa.get(cat)!.push(s);
-    });
-    return Array.from(mapa.entries()).map(([categoria, setores]) => ({ categoria, setores }));
-  }
-
-  getNomeSetor(setorId: number): string {
-    return this.setores.find(s => s.id === setorId)?.nome ?? '—';
+  getNomeSetor(setorId: string | number): string {
+    return this.setores().find(s => String(s.id) === String(setorId))?.nome ?? '—';
   }
 
   abrirFormulario(operador?: Operador): void {
-    this.editId = operador?.id ?? null;
+    this.editId.set(operador?.id ?? null);
     this.form = operador ? { ...operador } : {};
-    this.exibirFormulario = true;
+    this.exibirFormulario.set(true);
   }
 
   cancelar(): void {
-    this.exibirFormulario = false;
+    this.exibirFormulario.set(false);
     this.form = {};
-    this.editId = null;
+    this.editId.set(null);
   }
 
   salvar(): void {
@@ -73,8 +73,9 @@ export class OperadoresComponent implements OnInit {
       turno: this.form.turno!,
       matricula: this.form.matricula!.trim().toUpperCase()
     };
-    if (this.editId) {
-      this.operadorService.update(this.editId, { ...payload, id: this.editId })
+    const id = this.editId();
+    if (id) {
+      this.operadorService.update(id as number, { ...payload, id })
         .subscribe(() => { this.carregarOperadores(); this.cancelar(); });
     } else {
       this.operadorService.create(payload)
@@ -82,9 +83,9 @@ export class OperadoresComponent implements OnInit {
     }
   }
 
-  excluir(id: number): void {
+  excluir(id: string | number): void {
     if (confirm('Excluir este operador?')) {
-      this.operadorService.remove(id).subscribe(() => this.carregarOperadores());
+      this.operadorService.remove(id as number).subscribe(() => this.carregarOperadores());
     }
   }
 }

@@ -78,6 +78,13 @@
       "nome": "Paulo César Andrade",
       "turno": "Manhã",
       "matricula": "OP-2024-005"
+    },
+    {
+      "setorId": 1,
+      "nome": "Teste",
+      "turno": "Manhã",
+      "matricula": "OP-2025-002",
+      "id": "twKspPX3ho4"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
